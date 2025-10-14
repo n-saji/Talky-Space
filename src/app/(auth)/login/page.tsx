@@ -27,7 +27,7 @@ export default async function Login() {
   }
   return (
     <div className="min-h-screen flex flex-col">
-      <NavBar landingPage={false} />
+      <NavBar landingPage={false} isAuthenticated={!!token} />
       <div className="flex flex-1 flex-col px-4 max-w-md w-full mx-auto">
         <Tabs defaultValue="sign-in" className="w-full my-6 px-4">
           <TabsList className="mb-4">
