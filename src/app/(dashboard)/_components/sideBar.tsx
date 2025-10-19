@@ -1,5 +1,6 @@
 "use client";
 import {
+  Apple,
   Calendar,
   ChevronUp,
   Home,
@@ -17,9 +18,11 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 
 import {
@@ -38,6 +41,7 @@ import fetchProfileUrl from "@/utils/fetchProfileURl";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { setUser } from "@/redux/slices/userSlice";
+import Image from "next/image";
 
 // Menu items.
 const items = [
@@ -103,24 +107,33 @@ export function AppSidebar() {
     };
 
     fetchProfilePicture();
-  }, []);
+  }, [user.avatar_file_path]);
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/">
+                <Apple className="mr-2" width={20} height={20} />
+                <span>TalkySpace</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xl font-medium" asChild>
-            <Link href="/">TalkySpace</Link>
-          </SidebarGroupLabel>
-          <SidebarGroupContent className="mt-2">
+          <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
+                    <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -134,17 +147,26 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton className="w-full">
-                  <Avatar className="">
+                  {/* <Avatar>
                     <AvatarImage
-                      src={user.avatar_url || "/default-avatar.png"}
+                      src={user.avatar_url}
                       alt="Avatar"
-                      className="object-cover relative"
+                      className="object-cover"
                     />
                     <AvatarFallback>
                       {user.name.charAt(0).toUpperCase() || "G"}
                     </AvatarFallback>
-                  </Avatar>
-                  <span>{user.name || "Guest"}</span>
+                  </Avatar> */}
+
+                  <Image
+                    src={user.avatar_url || "/default-avatar.png"}
+                    alt="Avatar"
+                    width={28}
+                    height={28}
+                    className="object-cover rounded-full"
+                  />
+
+                  {user.name || "Guest"}
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
