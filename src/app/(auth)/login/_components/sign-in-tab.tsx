@@ -11,11 +11,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { setUser } from "@/redux/slices/userSlice";
+import { RootState } from "@/redux/store";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -38,24 +41,61 @@ export default function SignInTab() {
     },
   });
   const { isSubmitting } = form.formState;
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
 
   async function handleSignIn(data: SignInForm) {
-    const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
+    const qp = new URLSearchParams();
+    qp.append("remember_me", data.rememberMe ? "true" : "false");
+    const res = await fetch(
+      process.env.NEXT_PUBLIC_API_URL + "/auth/login?" + qp.toString(),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+        credentials: "include",
+      }
+    );
+
+    if (res.ok) {
+      const userProfile = await fetchUserProfile();
+      if (userProfile) {
+        dispatch(
+          setUser({
+            id: userProfile.id,
+            name: userProfile.name,
+            email: userProfile.email,
+            avatar_file_path: userProfile.avatar,
+          })
+        );
+        toast.success(
+          `Welcome back, ${userProfile.name || userProfile.email}!`
+        );
+        router.push("/dashboard");
+        return;
+      }
+    } else {
+      // const errorData = await res.json();
+      toast.error("Email and password combination doesn't exist.");
+    }
+  }
+
+  async function fetchUserProfile() {
+    const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/users/me", {
+      method: "GET",
       credentials: "include",
     });
 
     if (res.ok) {
-      router.push("/setup-profile");
+      const userProfile = await res.json();
+      return userProfile;
     } else {
-      const errorData = await res.json();
-      toast.error("Email and password combination doesn't exist.");
+      return null;
     }
   }
+
   return (
     <Form {...form}>
       <form className="grid gap-4" onSubmit={form.handleSubmit(handleSignIn)}>

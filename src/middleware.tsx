@@ -9,7 +9,7 @@ export function middleware(req: NextRequest) {
 
   // ✅ If logged in and trying to access login/signup, redirect to home
   if (token && pathname.startsWith("/login")) {
-    return NextResponse.redirect(new URL("/setup-profile", req.url));
+    return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
   // ✅ If not logged in and trying to access protected routes

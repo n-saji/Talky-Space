@@ -2,7 +2,13 @@
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 
-export default function NavBar({ landingPage, isAuthenticated }: { landingPage?: boolean, isAuthenticated: boolean }) {
+export default function NavBar({
+  landingPage,
+  isAuthenticated,
+}: {
+  landingPage?: boolean;
+  isAuthenticated: boolean;
+}) {
   const router = useRouter();
   return (
     <div
@@ -24,7 +30,7 @@ export default function NavBar({ landingPage, isAuthenticated }: { landingPage?:
             </Button>
           )}
           {isAuthenticated && (
-            <Button onClick={() => router.push("/setup-profile")}>
+            <Button onClick={() => router.push("/dashboard")}>
               Go to Dashboard
             </Button>
           )}

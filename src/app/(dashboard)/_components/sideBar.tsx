@@ -32,6 +32,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Link from "next/link";
+import { useEffect } from "react";
+import fetchProfileUrl from "@/utils/fetchProfileURl";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
+import { setUser } from "@/redux/slices/userSlice";
 
 // Menu items.
 const items = [
@@ -69,19 +75,42 @@ export function AppSidebar() {
     });
     if (res.ok) {
       // Clear local storage and redirect to login page
-      localStorage.clear();
+      // localStorage.clear();
       router.push("/login");
     } else {
       toast.error("Error logging out. Please try again.");
     }
   }
 
+  const user = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      if (user.avatar_file_path) {
+        try {
+          const url = await fetchProfileUrl(user.avatar_file_path);
+          dispatch(
+            setUser({
+              ...user,
+              avatar_url: url,
+            })
+          );
+        } catch (error) {
+          console.error("Error fetching profile picture:", error);
+        }
+      }
+    };
+
+    fetchProfilePicture();
+  }, []);
+
   return (
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xl font-medium" asChild>
-            <a href="/">TalkySpace</a>
+            <Link href="/">TalkySpace</Link>
           </SidebarGroupLabel>
           <SidebarGroupContent className="mt-2">
             <SidebarMenu>
@@ -107,26 +136,24 @@ export function AppSidebar() {
                 <SidebarMenuButton className="w-full">
                   <Avatar className="">
                     <AvatarImage
-                      src={
-                        localStorage.getItem("avatarUrl") ||
-                        "/default-avatar.png"
-                      }
+                      src={user.avatar_url || "/default-avatar.png"}
                       alt="Avatar"
                       className="object-cover relative"
                     />
-                    <AvatarFallback className="">
-                      {localStorage
-                        .getItem("username")
-                        ?.charAt(0)
-                        .toUpperCase() || "G"}
+                    <AvatarFallback>
+                      {user.name.charAt(0).toUpperCase() || "G"}
                     </AvatarFallback>
                   </Avatar>
-                  <span>{localStorage.getItem("username") || "Guest"}</span>
+                  <span>{user.name || "Guest"}</span>
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" className="w-64">
-                <DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    router.push("/profile");
+                  }}
+                >
                   <span className="flex items-center gap-2">
                     {" "}
                     <User /> Account
@@ -151,9 +178,6 @@ export function AppSidebar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* <a href="/auth/login">
-              {localStorage.getItem("username") || "Guest"}
-            </a> */}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

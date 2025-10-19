@@ -50,7 +50,7 @@ export default function SignUpTab() {
       return;
     }
 
-    const createUser: CreateUser = {
+    const User: User = {
       email: data.email,
       name: data.name,
       phone_number: data.phoneNumber,
@@ -64,11 +64,11 @@ export default function SignUpTab() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(createUser),
+        body: JSON.stringify(User),
       }
     );
     if (res.ok) {
-      router.push("/setup-profile");
+      router.push("/dashboard");
     } else {
       const errorData = await res.json();
       if (errorData.error === "user already exists") {

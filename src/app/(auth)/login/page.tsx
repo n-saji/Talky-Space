@@ -23,7 +23,7 @@ export default async function Login() {
   const token = cookiesStore.get("access_token")?.value;
 
   if (token) {
-    redirect("/setup-profile");
+    redirect("/dashboard");
   }
   return (
     <div className="min-h-screen flex flex-col">
