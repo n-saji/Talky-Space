@@ -8,6 +8,7 @@ const userSlice = createSlice({
     email: "",
     avatar_file_path: "",
     avatar_url: "",
+    phone_number: "",
   },
   reducers: {
     setUser(state, action) {
@@ -16,11 +17,13 @@ const userSlice = createSlice({
       state.email = action.payload.email;
       state.avatar_file_path = action.payload.avatar_file_path;
       state.avatar_url = action.payload.avatar_url;
+      state.phone_number = action.payload.phone_number;
     },
     clearUser(state) {
       state.id = null;
       state.name = "";
       state.email = "";
+      state.phone_number = "";
       state.avatar_file_path = "";
       state.avatar_url = "";
     },

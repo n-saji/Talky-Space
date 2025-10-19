@@ -68,6 +68,7 @@ export default function SignInTab() {
             name: userProfile.name,
             email: userProfile.email,
             avatar_file_path: userProfile.avatar,
+            phone_number: userProfile.phone_number,
           })
         );
         toast.success(

@@ -43,7 +43,7 @@ import { setUser } from "@/redux/slices/userSlice";
 const items = [
   {
     title: "Home",
-    url: "#",
+    url: "/dashboard",
     icon: Home,
   },
   {

@@ -55,6 +55,7 @@ export default function Profile() {
             id: data.id,
             name: data.name,
             email: data.email,
+            phone_number: data.phone_number,
             avatar_file_path: data.avatar,
           })
         );
@@ -244,13 +245,25 @@ export default function Profile() {
             </Dialog>
           </Avatar>
           <div className="text-center mb-4">
-            <h2 className="text-2xl font-semibold">{user?.name}</h2>
-            <p className="text-muted-foreground">{user?.email}</p>
+            <h2 className="text-2xl font-semibold">{user.name}</h2>
+            <p className="text-muted-foreground">{user.email}</p>
+          </div>
+          <div>
+            <Label className="font-semibold mb-3 text-md">Profile Details:</Label>
+            <Label className="mb-2 block">
+              <span className="font-semibold">User ID:</span> {user.id}
+            </Label>
+            <Label className="mb-2 block">
+              <span className="font-semibold">Email:</span> {user.email}
+            </Label>
+            <Label className="mb-2 block">
+              <span className="font-semibold">Phone number:</span> {user.phone_number}
+            </Label>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end">
+        {/* <CardFooter className="flex justify-end">
           <Button>Save Changes</Button>
-        </CardFooter>
+        </CardFooter> */}
       </Card>
     </div>
   );
