@@ -4,9 +4,11 @@ import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { persistReducer, persistStore } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // defaults to localStorage
 import userReducer from "./slices/userSlice";
+import websocketReducer from "./slices/websocketsSlice";
 
 const rootReducer = combineReducers({
   user: userReducer,
+  websocket: websocketReducer,
 });
 
 const persistConfig = {
@@ -18,7 +20,7 @@ const persistConfig = {
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: persistedReducer, 
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false, // required for redux-persist

@@ -11,9 +11,11 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import api from "@/lib/api";
 import { setUser } from "@/redux/slices/userSlice";
 import { RootState } from "@/redux/store";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -47,19 +49,10 @@ export default function SignInTab() {
   async function handleSignIn(data: SignInForm) {
     const qp = new URLSearchParams();
     qp.append("remember_me", data.rememberMe ? "true" : "false");
-    const res = await fetch(
-      process.env.NEXT_PUBLIC_API_URL + "/auth/login?" + qp.toString(),
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-        credentials: "include",
-      }
-    );
 
-    if (res.ok) {
+    const res = await api.post("/auth/login?" + qp.toString(), data);
+
+    if (res.status === 200) {
       const userProfile = await fetchUserProfile();
       if (userProfile) {
         dispatch(
@@ -84,13 +77,10 @@ export default function SignInTab() {
   }
 
   async function fetchUserProfile() {
-    const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/users/me", {
-      method: "GET",
-      credentials: "include",
-    });
+    const res = await api.get("/users/me");
 
-    if (res.ok) {
-      const userProfile = await res.json();
+    if (res.status === 200) {
+      const userProfile = await res.data;
       return userProfile;
     } else {
       return null;

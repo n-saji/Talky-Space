@@ -30,6 +30,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { setUser } from "@/redux/slices/userSlice";
 import { Spinner } from "@/components/ui/spinner";
+import api from "@/lib/api";
 
 export default function Profile() {
   const user = useSelector((state: RootState) => state.user);
@@ -39,28 +40,7 @@ export default function Profile() {
 
   useEffect(() => {
     async function fetchUser() {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/users/me", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        dispatch(
-          setUser({
-            ...user,
-            id: data.id,
-            name: data.name,
-            email: data.email,
-            phone_number: data.phone_number,
-            avatar_file_path: data.avatar,
-          })
-        );
-        return;
-      }
+      const res = await api.get("/users/me");
 
       if (res.status === 401) {
         return (
@@ -76,7 +56,7 @@ export default function Profile() {
           </div>
         );
       }
-      if (!res.ok) {
+      if (res.status === 500) {
         return (
           <div className="w-full mx-auto p-4">
             <Card className="max-w-2xl mx-auto">
@@ -88,6 +68,19 @@ export default function Profile() {
               </CardHeader>
             </Card>
           </div>
+        );
+      }
+      if (res.status === 200) {
+        const data = await res.data;
+        dispatch(
+          setUser({
+            ...user,
+            id: data.id,
+            name: data.name,
+            email: data.email,
+            phone_number: data.phone_number,
+            avatar_file_path: data.avatar,
+          })
         );
       }
     }
@@ -136,19 +129,9 @@ export default function Profile() {
           throw new Error("Failed to fetch signed URL for profile picture");
         });
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/update`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ avatar: filePath }),
-        }
-      );
+      const response = await api.put("/users/update", { avatar: filePath });
 
-      if (!response.ok) {
+      if (response.status !== 200) {
         throw new Error("Failed to update profile picture in backend.");
       }
     } catch (err) {
@@ -248,17 +231,20 @@ export default function Profile() {
             <h2 className="text-2xl font-semibold">{user.name}</h2>
             <p className="text-muted-foreground">{user.email}</p>
           </div>
-          <div>
-            <Label className="font-semibold mb-3 text-md">Profile Details:</Label>
-            <Label className="mb-2 block">
+          <div className="flex flex-col gap-2">
+            <Label className="font-semibold mb-3 text-md">
+              Profile Details:
+            </Label>
+            <div>
               <span className="font-semibold">User ID:</span> {user.id}
-            </Label>
-            <Label className="mb-2 block">
+            </div>
+            <div>
               <span className="font-semibold">Email:</span> {user.email}
-            </Label>
-            <Label className="mb-2 block">
-              <span className="font-semibold">Phone number:</span> {user.phone_number}
-            </Label>
+            </div>
+            <div>
+              <span className="font-semibold">Phone number:</span>{" "}
+              {user.phone_number}
+            </div>
           </div>
         </CardContent>
         {/* <CardFooter className="flex justify-end">

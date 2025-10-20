@@ -32,7 +32,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -42,17 +42,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { setUser } from "@/redux/slices/userSlice";
 import Image from "next/image";
+import api from "@/lib/api";
 
 // Menu items.
 const items = [
   {
-    title: "Home",
+    title: "Dashboard",
     url: "/dashboard",
     icon: Home,
   },
   {
-    title: "Inbox",
-    url: "#",
+    title: "Chat",
+    url: "/chat",
     icon: Inbox,
   },
   {
@@ -70,14 +71,8 @@ const items = [
 export function AppSidebar() {
   const router = useRouter();
   async function handleLogOut() {
-    const res = await fetch(process.env.NEXT_PUBLIC_API_URL + "/auth/logout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
-    if (res.ok) {
+    const res = await api.post("/auth/logout");
+    if (res.status === 200) {
       // Clear local storage and redirect to login page
       // localStorage.clear();
       router.push("/login");
