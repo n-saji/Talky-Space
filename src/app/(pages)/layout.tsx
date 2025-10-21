@@ -52,14 +52,14 @@ export default function DashboardLayout({
     <Provider store={store}>
       <SidebarProvider>
         <WebSocketManager />
-        <div className="min-h-screen flex w-full">
+        <div className="max-h-screen h-full flex w-full">
           {/* side bar */}
           <AppSidebar />
 
           {/* main window */}
-          <div className="w-full flex flex-col">
+          <div className="w-full flex flex-col max-h-screen overflow-hidden relative">
             <Navbar />
-            {children}
+            <main className="flex-1 mt-12">{children}</main>
           </div>
         </div>
       </SidebarProvider>

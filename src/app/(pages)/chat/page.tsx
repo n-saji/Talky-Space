@@ -29,10 +29,8 @@ export default function ChatPage() {
     setMsg("");
   };
 
-  console.log("Messages in chat page:", messages);
-
   return (
-    <div className="px-4 py-2 flex flex-col w-full justify-center items-center">
+    <div className="px-4 py-2 flex flex-1 flex-col w-full overflow-scroll scrollbar-hide">
       <ChatUI />
     </div>
   );

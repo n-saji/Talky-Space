@@ -18,7 +18,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const pathSegments = pathname.split("/").filter((seg) => seg.length > 0);
   return (
-    <div className="w-full flex items-center justify-start px-4 h-12 py-4">
+    <div className="w-full flex items-center justify-start px-4 h-12 py-4 absolute top-0 z-10 bg-black">
       <SidebarTrigger />
       <Separator orientation="vertical" className="mx-2 my-3" />
       <Breadcrumb>

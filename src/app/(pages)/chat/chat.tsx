@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   InputGroup,
@@ -27,17 +27,20 @@ import { Button } from "@/components/ui/button";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { toast } from "sonner";
-import { ms } from "zod/v4/locales";
 import { addMessage, Message } from "@/redux/slices/websocketsSlice";
+import Chatting from "./_components/chatting";
 
 export default function ChatUI() {
   const [query, setQuery] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<User[] | null>(null);
   const [sender, setSender] = useState<User>();
   const user = useSelector((state: RootState) => state.user);
   const [chatroom, setChatroom] = useState<ChatroomResponse | null>(null);
   const messages = useSelector((state: RootState) => state.websocket.messages);
+  const [oldMessages, setOldMessages] = useState<Message[]>([]);
   const dispatch = useDispatch();
+  const usersListRef = useRef<HTMLDivElement>(null);
+  const [showUsersList, setShowUsersList] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async (q: string) => {
@@ -64,10 +67,11 @@ export default function ChatUI() {
     const msgs = await api.get(`/messages/chatroom/${res.data.id}`);
     if (msgs.status === 200) {
       console.log("Fetched messages for chatroom:", msgs.data);
-      msgs.data.forEach((m: Message) => {
-        console.log("Dispatching message:", m);
-        dispatch(addMessage(m));
-      });
+      setOldMessages(msgs.data);
+      // msgs.data.forEach((m: Message) => {
+      //   console.log("Dispatching message:", m);
+      //   dispatch(addMessage(m));
+      // });
     } else {
       toast.error("Error fetching messages:", {
         description: JSON.stringify(msgs),
@@ -75,59 +79,78 @@ export default function ChatUI() {
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        usersListRef.current &&
+        !usersListRef.current.contains(event.target as Node)
+      ) {
+        setShowUsersList(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [usersListRef]);
+
   return (
-    <div className="flex flex-col w-full max-w-md gap-4">
-      <div className="w-full max-w-sm">
+    <div className="flex w-full h-full overflow-scroll">
+      <div className="w-full max-w-xs">
         <InputGroup>
           <InputGroupInput
             placeholder="Search for people..."
             onChange={(e) => {
               setQuery(e.target.value);
             }}
+            onFocus={() => setShowUsersList(true)}
           />
           <InputGroupAddon>
             <Search />
           </InputGroupAddon>
           {query && (
             <InputGroupAddon align="inline-end">
-              {users.length} results
+              {users?.length !== undefined ? `${users?.length}` : 0} results
             </InputGroupAddon>
           )}
         </InputGroup>
-        <ScrollArea className="h-28 mt-2">
-          {users.map((user) => (
-            <Item key={user.id} className="" variant={"outline"}>
-              <ItemMedia>
-                <Avatar>
-                  <AvatarFallback>
-                    {user.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </ItemMedia>
-              <ItemContent>
-                <ItemTitle>{user.name}</ItemTitle>
-                <ItemDescription>{user.email}</ItemDescription>
-                <ItemDescription>{user.phone_number}</ItemDescription>
-              </ItemContent>
-              <ItemActions>
-                <Button
-                  size={"sm"}
-                  variant={"outline"}
-                  onClick={async () => {
-                    await handleStartChat(user);
-                  }}
-                >
-                  Start Chat
-                </Button>
-              </ItemActions>
-            </Item>
-          ))}
-        </ScrollArea>
+        {showUsersList && (
+          <ScrollArea className="h-28 mt-2" ref={usersListRef}>
+            {users?.map((user) => (
+              <Item key={user.id} className="" variant={"outline"}>
+                <ItemMedia>
+                  <Avatar>
+                    <AvatarFallback>
+                      {user.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>{user.name}</ItemTitle>
+                  <ItemDescription>{user.email}</ItemDescription>
+                  <ItemDescription>{user.phone_number}</ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button
+                    size={"sm"}
+                    variant={"outline"}
+                    onClick={async () => {
+                      await handleStartChat(user);
+                    }}
+                  >
+                    Start Chat
+                  </Button>
+                </ItemActions>
+              </Item>
+            ))}
+          </ScrollArea>
+        )}
       </div>
-      <div className="max-h-[300px] overflow-scroll">
-        {messages.length > 0 && (
+      {/* <div className="max-h-[300px] overflow-scroll">
+        {oldMessages.length > 0 && (
           <div>
-            {messages.map((message) => (
+            {oldMessages.map((message) => (
               <div key={message.id} className="mb-2 p-2 ">
                 <div
                   className={
@@ -166,7 +189,8 @@ export default function ChatUI() {
             ))}
           </div>
         )}
-      </div>
+      </div> */}
+      <Chatting oldMessages={oldMessages} sender={sender} />
     </div>
   );
 }
