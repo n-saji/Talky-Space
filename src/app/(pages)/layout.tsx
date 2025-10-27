@@ -19,7 +19,6 @@ function WebSocketManager() {
     (state: RootState) => state.websocket.connected
   );
 
-
   useEffect(() => {
     let ws: WebSocket | null = null;
     let reconnectTimer: NodeJS.Timeout | null = null;
@@ -27,6 +26,7 @@ function WebSocketManager() {
     const maxReconnectAttempts = 5; // optional limit to retries
 
     const connect = () => {
+      if (connected) return; // already connected
       ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}`);
 
       ws.onopen = () => {
@@ -56,7 +56,6 @@ function WebSocketManager() {
       };
 
       ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
         ws?.close(); // ensures cleanup
       };
 

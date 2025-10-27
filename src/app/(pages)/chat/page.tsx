@@ -1,5 +1,4 @@
-
-import ChatUI from "./chat";
+import Chat from "./chat";
 
 export const metadata = {
   title: "Chat | TalkySpace",
@@ -7,13 +6,9 @@ export const metadata = {
 };
 
 export default function ChatPage() {
-
-
   return (
-    <div className="px-4 py-2 w-full h-full">
-      <ChatUI />
+    <div className="w-full h-full">
+      <Chat />
     </div>
   );
 }
-
-

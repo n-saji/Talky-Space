@@ -6,14 +6,10 @@ import { RootState } from "@/redux/store";
 import { addMessage, Message } from "@/redux/slices/websocketsSlice";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { use, useEffect, useState } from "react";
-
-interface MessageRequest {
-  type: string;
-  chatroom_id: string;
-  sender_id: string;
-  content: string;
-}
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRecipient } from "../../RecipientContext";
+import { useParams } from "next/navigation";
+import { HandleStartChat } from "../../_components/search-user";
 
 const MessageBubble = ({
   message,
@@ -21,8 +17,8 @@ const MessageBubble = ({
   user,
 }: {
   message: Message;
-  recipient: any;
-  user: any;
+  recipient: User | null;
+  user: RootState["user"];
 }) => {
   return (
     <div className="flex flex-col">
@@ -66,36 +62,86 @@ const MessageBubble = ({
   );
 };
 
-const SendMessageBubble = ({
-  message,
+const ChatMessages = ({
+  chatMessages,
+  recipient,
+  user,
+}: {
+  chatMessages: Message[];
+  recipient: User | null;
+  user: RootState["user"];
+}) => {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages]);
+
+  return (
+    <div className="mb-2 max-h-[calc(100vh-10rem)] overflow-y-auto">
+      {chatMessages.length > 0 && (
+        <>
+          {chatMessages.map((message, index) => (
+            <div key={`${message.id}-${index}`} className="mb-2 p-2">
+              <MessageBubble
+                message={message}
+                recipient={recipient}
+                user={user}
+              />
+            </div>
+          ))}
+          {/* 👇 dummy div to scroll into view */}
+          <div ref={messagesEndRef} />
+        </>
+      )}
+    </div>
+  );
+};
+
+const SendMessageInput = ({
   user,
   recipient,
   chatroom,
   socket,
 }: {
-  message: MessageRequest;
   user: RootState["user"];
-  recipient: User | undefined;
+  recipient: User | null;
   chatroom: ChatroomResponse | null;
   socket: WebSocket | null;
 }) => {
   const [msg, setMsg] = useState("");
   const dispatch = useDispatch();
 
-  const sendMessage = () => {
+  const sendMessage = useCallback(() => {
+    if (!msg.trim()) return;
     const mssg = {
       user_id: user.id,
       receiver_id: recipient?.id,
       content: msg,
       chatroom_id: chatroom?.id || "",
       source: "user",
-      created_at: Math.floor(new Date().getTime() / 1000),
+      created_at: Math.floor(Date.now() / 1000),
     };
     console.log("Sending message:", mssg);
     socket?.send(JSON.stringify(mssg));
-    dispatch(addMessage(mssg)); // also show in UI immediately
+    dispatch(addMessage(mssg));
     setMsg("");
-  };
+  }, [msg, user, recipient, chatroom, socket, dispatch]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        sendMessage();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [sendMessage]);
+
   return (
     <div className="flex w-full gap-2">
       <Input
@@ -109,28 +155,53 @@ const SendMessageBubble = ({
   );
 };
 
-export default function Chatting({
-  oldMessages,
-  recipient,
-  chatroom,
-}: {
-  oldMessages: Message[];
-  recipient: User | undefined;
-  chatroom: ChatroomResponse | null;
-}) {
-  const [chatMessages, setChatMessages] = useState<Message[]>(oldMessages);
+
+export default function Chatting() {
+  const { recipient, chatroom, serverMessages, setRecipient, setChatroom } =
+    useRecipient();
+  const [chatMessages, setChatMessages] = useState<Message[]>(
+    serverMessages || []
+  );
+
   const user = useSelector((state: RootState) => state.user);
   const { socket, messages } = useSelector(
     (state: RootState) => state.websocket
   );
+
+  // fallback if user refreshes the page
+  const params = useParams();
+  useEffect(() => {
+    if (!recipient) {
+      const url_recipient_id = params.recipient || "";
+      console.log(
+        `Chatting useEffect fetching recipient for id: ${url_recipient_id}`
+      );
+      setRecipient({
+        id: String(url_recipient_id),
+        name: "",
+      } as User);
+      // Fetch recipient details based on params.recipient
+      HandleStartChat({
+        user_id: user.id || "",
+        recipient_id: String(url_recipient_id) || "",
+      }).then(({ chatroom_response, messages }) => {
+        if (chatroom_response) {
+          setChatroom(chatroom_response); // cannot set here as it will cause re-render loop
+        }
+        if (messages) {
+          setChatMessages(messages);
+        }
+      });
+    }
+  }, [params.recipient, recipient]);
 
   useEffect(() => {
     console.log("Updated messages:", messages);
     const relevantMessages = messages.filter(
       (msg) => msg.chatroom_id === chatroom?.id
     );
-    setChatMessages([...oldMessages, ...relevantMessages]);
-  }, [messages,oldMessages]);
+    setChatMessages([...(serverMessages ?? []), ...relevantMessages]);
+  }, [messages, serverMessages]);
 
   if (chatMessages.length === 0) {
     return (
@@ -142,25 +213,13 @@ export default function Chatting({
 
   return (
     <div className="flex flex-col px-4 h-full justify-end">
-      <div className="mb-2 max-h-[calc(100vh-10rem)] overflow-y-auto">
-        {chatMessages.length > 0 && (
-          <div>
-            {chatMessages.map((message, index) => (
-              <div key={`${message.id}-${index}`} className="mb-2 p-2 ">
-                <MessageBubble message={message} recipient={recipient} user={user} />
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      {/* TODO: Implement sending new messages `*/}
-      <SendMessageBubble
-        message={{
-          type: "",
-          chatroom_id: "",
-          sender_id: "",
-          content: "",
-        }}
+      <ChatMessages
+        chatMessages={chatMessages}
+        recipient={recipient}
+        user={user}
+      />
+
+      <SendMessageInput
         user={user}
         recipient={recipient}
         chatroom={chatroom}

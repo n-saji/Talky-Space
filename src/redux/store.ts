@@ -14,7 +14,7 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["user"], // persist user slice
+  whitelist: ["user"], // persist user and websocket slices
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
