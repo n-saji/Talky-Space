@@ -40,6 +40,7 @@ export default function SignInTab() {
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: true,
     },
   });
   const { isSubmitting } = form.formState;

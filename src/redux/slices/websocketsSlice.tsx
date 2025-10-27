@@ -13,7 +13,7 @@ export interface Message {
 const websocketSlice = createSlice({
   name: "websocket",
   initialState: {
-    socket: null,
+    socket: null as WebSocket | null,
     connected: false,
     messages: [] as Message[],
   },
