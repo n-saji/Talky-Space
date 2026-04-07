@@ -51,7 +51,10 @@ export default function SignInTab() {
     const qp = new URLSearchParams();
     qp.append("remember_me", data.rememberMe ? "true" : "false");
 
-    const res = await api.post("/auth/login?" + qp.toString(), data);
+    const res = await api.post("/auth/login?" + qp.toString(), {
+      "email": data.email,
+      "password": data.password,
+    });
 
     if (res.status === 200) {
       const userProfile = await fetchUserProfile();
